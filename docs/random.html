@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Random Pick · Amherst Food Guide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600&display=swap");
+    :root {
+      font-family: "Manrope", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: #0c1a2b;
+      background: linear-gradient(135deg, #f7f9fc 0%, #eef2f8 100%);
+    }
+    body { margin: 0; padding: 2rem 1.5rem 3rem; }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 18px 40px rgba(23, 42, 69, 0.08);
+      padding: 1.5rem 1.75rem 2rem;
+    }
+    #topbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    #topbar a { color: #0b5cab; text-decoration: none; font-weight: 700; font-size: 0.95rem; margin-right: 12px; }
+    #topbar a:last-child { margin-right: 0; }
+    #topbar a:hover { text-decoration: underline; }
+    h1 { margin: 0; letter-spacing: -0.02em; }
+    .muted { color: #4b5563; font-size: 0.95rem; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 8px 24px rgba(23, 42, 69, 0.07); padding: 1.1rem 1.2rem; border: 1px solid #e6e9ef; margin-top: 1rem; }
+    .pill { display: inline-block; padding: 0.28rem 0.65rem; border-radius: 999px; background: #eef2f7; color: #111827; font-size: 0.85rem; margin-right: 0.35rem; margin-bottom: 0.3rem; }
+    .badge { display: inline-block; padding: 0.18rem 0.5rem; border-radius: 999px; background: #e6f4ff; color: #0b5cab; border: 1px solid #c5e2ff; font-size: 0.8rem; margin-right: 0.25rem; margin-bottom: 0.25rem; }
+    button { padding: 0.65rem 0.9rem; border-radius: 10px; border: 1px solid #0b5cab; background: #0b5cab; color: #fff; font-weight: 700; cursor: pointer; margin-right: 0.5rem; }
+    button.secondary { background: #fff; color: #0b5cab; }
+    #controls { margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    input[type="search"] { padding: 0.55rem 0.75rem; font-size: 1rem; border: 1px solid #d5d9e0; border-radius: 10px; min-width: 220px; background: #fdfdfd; }
+    #result { margin-top: 1rem; }
+    #footer { max-width: 760px; margin: 1rem auto 0; display: flex; justify-content: space-between; gap: 1rem; color: #4b5563; font-size: 0.9rem; padding: 0 0.25rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="topbar">
+      <div>
+        <h1>Random pick</h1>
+        <p class="muted">Optionally filter by town (query param <code>?town=</code> or use the box) and get a random spot.</p>
+      </div>
+      <div>
+        <a href="index.html">Back to list</a>
+        <a href="stats.html">Stats</a>
+      </div>
+    </div>
+
+    <div id="controls">
+      <input id="town" type="search" placeholder="Filter by town (e.g., Amherst, Hadley)" aria-label="Town filter">
+      <button id="pick">Pick random</button>
+      <button id="clear" class="secondary">Clear filter</button>
+    </div>
+
+    <div id="result"></div>
+  </main>
+  <div id="footer">
+    <div id="last-updated">Last updated: —</div>
+    <div id="copyright">© <span id="copyright-year"></span> 413-food contributors</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script>
+    const DATA_URL = "./restaurants.yaml";
+    const state = { entries: [], filtered: [] };
+
+    const townInput = document.getElementById("town");
+    const pickBtn = document.getElementById("pick");
+    const clearBtn = document.getElementById("clear");
+    const resultEl = document.getElementById("result");
+    const lastUpdatedEl = document.getElementById("last-updated");
+    const copyrightYearEl = document.getElementById("copyright-year");
+
+    townInput.addEventListener("input", applyFilter);
+    pickBtn.addEventListener("click", pickRandom);
+    clearBtn.addEventListener("click", () => {
+      townInput.value = "";
+      applyFilter();
+      pickRandom();
+    });
+
+    copyrightYearEl.textContent = new Date().getFullYear();
+
+    loadData().then(() => {
+      hydrateFromQuery();
+      pickRandom();
+    }).catch((err) => {
+      console.error(err);
+      resultEl.innerHTML = `<p class="muted">Could not load data.</p>`;
+    });
+
+    async function loadData() {
+      const res = await fetch(DATA_URL);
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const text = await res.text();
+      const data = jsyaml.load(text);
+      if (!Array.isArray(data)) throw new Error("Data format unexpected");
+      state.entries = data.slice().sort((a, b) => a.name.localeCompare(b.name));
+      state.filtered = state.entries;
+      renderLastUpdated(state.entries);
+    }
+
+    function hydrateFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const townParam = params.get("town");
+      if (townParam) {
+        townInput.value = townParam;
+        applyFilter();
+      }
+    }
+
+    function applyFilter() {
+      const town = townInput.value.trim().toLowerCase();
+      state.filtered = state.entries.filter((e) => {
+        if (!town) return true;
+        return (e.town || "").toLowerCase().includes(town);
+      });
+    }
+
+    function pickRandom() {
+      if (!state.filtered.length) {
+        resultEl.innerHTML = `<div class="card"><p class="muted">No matches for that town filter.</p></div>`;
+        return;
+      }
+      const idx = Math.floor(Math.random() * state.filtered.length);
+      const entry = state.filtered[idx];
+      renderEntry(entry, state.filtered.length);
+    }
+
+    function renderEntry(entry, poolSize) {
+      const tags = [];
+      if (entry.town) tags.push(pill(entry.town));
+      if (entry.neighborhood) tags.push(pill(entry.neighborhood));
+      if (entry.price) tags.push(pill(`Price ${entry.price}`));
+      const order = renderOrdering(entry.ordering);
+      const dietary = renderDietary(entry.dietary);
+      const highlights = renderHighlights(entry.highlight_items);
+      const hours = renderHours(entry.hours);
+      const sources = renderSources(entry.sources);
+      resultEl.innerHTML = `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+            <div>
+              <h2 style="margin:0;">${escapeHtml(entry.name || "")}</h2>
+              <p class="muted" style="margin:0.1rem 0;">${escapeHtml(entry.cuisine || "")}</p>
+            </div>
+            <span class="muted">Pool: ${poolSize} match${poolSize === 1 ? "" : "es"}</span>
+          </div>
+          <div style="margin:0.5rem 0 0.25rem;">${tags.join("")}</div>
+          ${entry.website ? `<div style="margin:0.25rem 0;"><a href="${escapeAttr(entry.website)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.website)}</a></div>` : ""}
+          ${entry.address ? `<div style="margin:0.25rem 0;">${escapeHtml(entry.address)}</div>` : ""}
+          ${order ? section("Ordering", order) : ""}
+          ${dietary ? section("Dietary", dietary) : ""}
+          ${hours ? section("Hours", hours) : ""}
+          ${highlights ? section("Highlights", highlights) : ""}
+          ${entry.notes ? section("Notes", escapeHtml(entry.notes)) : ""}
+          ${sources ? section("Sources", sources) : ""}
+          <div style="margin-top:0.5rem;" class="muted">Last verified: ${escapeHtml(entry.last_verified || "")}</div>
+        </div>
+      `;
+    }
+
+    function pill(text) {
+      return `<span class="pill">${escapeHtml(text)}</span>`;
+    }
+
+    function section(title, content) {
+      if (!content) return "";
+      return `<div style="margin-top:0.6rem;"><h3 style="margin:0 0 0.2rem;">${escapeHtml(title)}</h3><div>${content}</div></div>`;
+    }
+
+    function renderOrdering(ordering = []) {
+      if (!Array.isArray(ordering) || ordering.length === 0) return "";
+      return ordering.map((o) => `<span class="badge">${escapeHtml(o)}</span>`).join(" ");
+    }
+
+    function renderDietary(dietary = {}) {
+      if (typeof dietary !== "object") return "";
+      const flags = [];
+      if (dietary.vegetarian_friendly) flags.push("Vegetarian-friendly");
+      if (dietary.vegan_options) flags.push("Vegan options");
+      if (dietary.gluten_free_friendly) flags.push("Gluten-free friendly");
+      if (!flags.length) return "";
+      return flags.map((f) => `<span class="badge">${escapeHtml(f)}</span>`).join(" ");
+    }
+
+    function renderHighlights(list = []) {
+      if (!Array.isArray(list) || list.length === 0) return "";
+      return list.map((item) => `<div><strong>${escapeHtml(item.item || "")}</strong>: ${escapeHtml(item.note || "")}</div>`).join("");
+    }
+
+    function renderHours(hours = {}) {
+      if (typeof hours !== "object") return "";
+      const days = ["mon","tue","wed","thu","fri","sat","sun"];
+      return days
+        .filter((d) => hours[d])
+        .map((d) => `<div><strong>${d.toUpperCase()}</strong>: ${escapeHtml(hours[d])}</div>`)
+        .join("");
+    }
+
+    function renderSources(sources = []) {
+      if (!Array.isArray(sources) || sources.length === 0) return "";
+      return sources.map((s) => {
+        const label = escapeHtml(s.type || "");
+        const detail = s.detail || "";
+        const detailHtml = isUrl(detail)
+          ? `<a href="${escapeAttr(detail)}" target="_blank" rel="noopener noreferrer">${escapeHtml(detail)}</a>`
+          : escapeHtml(detail);
+        return `<div>${label ? `${label}: ` : ""}${detailHtml}</div>`;
+      }).join("");
+    }
+
+    function renderLastUpdated(entries = []) {
+      const dates = entries
+        .map((e) => e.last_verified)
+        .filter(Boolean)
+        .map((d) => new Date(d))
+        .filter((d) => !Number.isNaN(d.getTime()));
+      if (!dates.length) return;
+      const latest = new Date(Math.max(...dates.map((d) => d.getTime())));
+      const fmt = latest.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+      lastUpdatedEl.textContent = `Last updated: ${fmt}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/"/g, "&quot;");
+    }
+
+    function isUrl(str) {
+      if (!str || typeof str !== "string") return false;
+      const lower = str.toLowerCase();
+      return lower.startsWith("http://") || lower.startsWith("https://");
+    }
+  </script>
+</body>
+</html>
