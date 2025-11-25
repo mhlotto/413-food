@@ -1,0 +1,39 @@
+- name: Athena's Pizza Amherst
+  town: Amherst
+  neighborhood: University Drive
+  address: 65 University Drive, Amherst, MA 01002
+  coordinates:
+    lat: 42.3714
+    lng: -72.5364
+  phone: 413-549-9900
+  website: https://www.athenaspizzaamherst.com/
+  cuisine: Pizza and Italian
+  price: $
+  ordering:
+    - dine-in
+    - takeout
+    - delivery
+  dietary:
+    vegetarian_friendly: true
+    vegan_options: false
+    gluten_free_friendly: false
+  hours:
+    mon: "closed"
+    tue: "10:30-21:00"
+    wed: "10:30-21:00"
+    thu: "10:30-21:00"
+    fri: "10:30-21:00"
+    sat: "10:30-21:00"
+    sun: "10:30-21:00"
+  highlight_items:
+    - item: Specialty pizzas
+      note: Classic pies and house specials with hand-tossed crust
+    - item: Calzones and grinders
+      note: Hearty portions; good late meal option near UMass
+    - item: Wings
+      note: Multiple sauces; popular with takeout orders
+  notes: University Drive location near UMass; delivery available
+  last_verified: 2025-11-25
+  sources:
+    - type: website
+      detail: https://www.athenaspizzaamherst.com/
