@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Amherst, MA Food Guide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: #111;
+      background: #f6f6f9;
+    }
+    body {
+      margin: 0;
+      padding: 2rem 1.5rem 3rem;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      padding: 1.5rem 1.75rem 2rem;
+    }
+    h1 {
+      margin-top: 0;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.02em;
+    }
+    #status {
+      margin: 0.25rem 0 1rem;
+      color: #555;
+      font-size: 0.95rem;
+    }
+    #controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    input[type="search"], select {
+      padding: 0.55rem 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #d5d9e0;
+      border-radius: 8px;
+      min-width: 220px;
+      background: #fdfdfd;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.97rem;
+    }
+    thead {
+      background: #f0f2f7;
+    }
+    th, td {
+      padding: 0.65rem 0.55rem;
+      border-bottom: 1px solid #e6e9ef;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { font-weight: 600; }
+    tr:hover td { background: #fafbff; }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      margin-right: 0.2rem;
+      border-radius: 999px;
+      background: #e6f4ff;
+      color: #0b5cab;
+      border: 1px solid #c5e2ff;
+      font-size: 0.8rem;
+    }
+    .muted { color: #666; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Amherst, MA Food Guide</h1>
+    <p class="muted">Client-side view of <code>data/restaurants.yaml</code>. Use search to filter by name, neighborhood, or cuisine.</p>
+    <div id="status">Loading data…</div>
+    <div id="controls">
+      <input id="search" type="search" placeholder="Search name, neighborhood, cuisine" aria-label="Search restaurants">
+      <select id="priceFilter" aria-label="Filter by price">
+        <option value="">All prices</option>
+        <option value="$">$</option>
+        <option value="$$">$$</option>
+        <option value="$$$">$$$</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table id="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Neighborhood</th>
+            <th>Cuisine</th>
+            <th>Price</th>
+            <th>Ordering</th>
+            <th>Highlights</th>
+            <th>Last verified</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script>
+    const DATA_URL = "../data/restaurants.yaml";
+    const state = { entries: [], filtered: [] };
+
+    const statusEl = document.getElementById("status");
+    const searchEl = document.getElementById("search");
+    const priceEl = document.getElementById("priceFilter");
+    const tbody = document.querySelector("#table tbody");
+
+    searchEl.addEventListener("input", applyFilters);
+    priceEl.addEventListener("change", applyFilters);
+
+    async function loadData() {
+      try {
+        const res = await fetch(DATA_URL);
+        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+        const text = await res.text();
+        const data = jsyaml.load(text);
+        if (!Array.isArray(data)) throw new Error("Data format unexpected");
+        state.entries = data.slice().sort((a, b) => a.name.localeCompare(b.name));
+        statusEl.textContent = `Loaded ${state.entries.length} spots`;
+        state.filtered = state.entries;
+        render();
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Could not load data. Ensure data/restaurants.yaml is accessible.";
+      }
+    }
+
+    function applyFilters() {
+      const term = searchEl.value.trim().toLowerCase();
+      const price = priceEl.value;
+      state.filtered = state.entries.filter((entry) => {
+        const haystack = `${entry.name} ${entry.neighborhood || ""} ${entry.cuisine || ""}`.toLowerCase();
+        const matchesTerm = !term || haystack.includes(term);
+        const matchesPrice = !price || entry.price === price;
+        return matchesTerm && matchesPrice;
+      });
+      render();
+    }
+
+    function render() {
+      tbody.innerHTML = "";
+      for (const entry of state.filtered) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${escapeHtml(entry.name || "")}</td>
+          <td>${escapeHtml(entry.neighborhood || "")}</td>
+          <td>${escapeHtml(entry.cuisine || "")}</td>
+          <td>${escapeHtml(entry.price || "")}</td>
+          <td>${renderOrdering(entry.ordering)}</td>
+          <td>${renderHighlights(entry.highlight_items)}</td>
+          <td>${escapeHtml(entry.last_verified || "")}</td>
+        `;
+        tbody.appendChild(row);
+      }
+    }
+
+    function renderOrdering(ordering = []) {
+      if (!Array.isArray(ordering) || ordering.length === 0) return "";
+      return ordering.map((o) => `<span class="badge">${escapeHtml(o)}</span>`).join(" ");
+    }
+
+    function renderHighlights(list = []) {
+      if (!Array.isArray(list) || list.length === 0) return "";
+      return list
+        .map((item) => `<div><strong>${escapeHtml(item.item || "")}</strong>: ${escapeHtml(item.note || "")}</div>`)
+        .join("");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
