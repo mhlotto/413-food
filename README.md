@@ -74,7 +74,8 @@ A community-maintained list of where to eat in and around Amherst, MA. Data live
 ## GitHub Pages view
 - In GitHub: Settings -> Pages -> Build and deployment -> Source: Deploy from branch. Pick your default branch (e.g., `main`) and folder `/` so `data/` stays reachable. Save changes.
 - After Pages finishes, open `https://<your-username>.github.io/<repo>/docs/` to browse the data. Locally, run `python -m http.server` from repo root and open `http://localhost:8000/docs/`.
-- The page fetches `data/restaurants.yaml`, parses it client-side, and lists spots with search and filters. Click a row for a detail view (shows hours, dietary flags, notes, comments, sources). If you must use the `/docs` folder as the Pages source, copy `data/restaurants.yaml` into `docs/` or adjust the fetch path.
+- The page fetches `data/restaurants.yaml`, parses it client-side, and lists spots with search and filters. Click a row for a detail view (shows hours, dietary flags, notes, comments, sources).
+- If you keep Pages set to `/docs`, make sure a copy of `restaurants.yaml` exists in `docs/` (kept in sync with `data/restaurants.yaml`), or adjust `DATA_URL` accordingly. A simple approach is to run `cp data/restaurants.yaml docs/restaurants.yaml` before pushing changes.
 
 ## CI
 - GitHub Actions workflow: `.github/workflows/validate.yml` runs `scripts/validate.py data/restaurants.yaml` on pushes and PRs.
