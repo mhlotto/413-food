@@ -118,6 +118,15 @@ def validate_entry(entry, idx, errors):
                 if "type" not in s or "detail" not in s:
                     errors.append(f"{prefix}: each source needs `type` and `detail`")
 
+    if "comments" in entry:
+        comments = entry.get("comments", [])
+        if not isinstance(comments, list):
+            errors.append(f"{prefix}: comments must be a list of strings")
+        else:
+            for c in comments:
+                if not isinstance(c, str):
+                    errors.append(f"{prefix}: each comment must be a string")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Validate restaurant YAML data.")

@@ -20,6 +20,7 @@ A community-maintained list of where to eat in and around Amherst, MA. Data live
 - `name`, `neighborhood`, `address`, `phone`, `website`, optional `coordinates` (`lat`, `lng`).
 - `cuisine`, `price` ($/$$/$$$), `ordering` (dine-in/takeout/delivery), `hours` (strings like `11:00-21:00`).
 - `dietary` flags (vegetarian_friendly, vegan_options, gluten_free_friendly), `highlight_items` (signature dishes), `notes` (parking, cash-only, waits).
+- Optional: `comments` (short freeform notes for the detail view).
 - `last_verified` (YYYY-MM-DD) and `sources` (visited/menu/social links).
 
 ## Restaurant entry template
@@ -71,9 +72,12 @@ A community-maintained list of where to eat in and around Amherst, MA. Data live
 - The script checks required fields, enum values, booleans, and `last_verified` format.
 
 ## GitHub Pages view
-- Enable GitHub Pages for this repo using the `docs/` folder as the source.
-- Open `docs/index.html` via Pages or locally (e.g., `python -m http.server` from repo root) to browse the data without cloning the YAML.
-- The page fetches `data/restaurants.yaml`, parses it client-side, and lists spots with search and filters.
+- In GitHub: Settings -> Pages -> Build and deployment -> Source: Deploy from branch. Pick your default branch (e.g., `main`) and folder `/` so `data/` stays reachable. Save changes.
+- After Pages finishes, open `https://<your-username>.github.io/<repo>/docs/` to browse the data. Locally, run `python -m http.server` from repo root and open `http://localhost:8000/docs/`.
+- The page fetches `data/restaurants.yaml`, parses it client-side, and lists spots with search and filters. Click a row for a detail view (shows hours, dietary flags, notes, comments, sources). If you must use the `/docs` folder as the Pages source, copy `data/restaurants.yaml` into `docs/` or adjust the fetch path.
+
+## CI
+- GitHub Actions workflow: `.github/workflows/validate.yml` runs `scripts/validate.py data/restaurants.yaml` on pushes and PRs.
 
 ## Future ideas
 - Add a GitHub Actions workflow to run `scripts/validate.py` on PRs.

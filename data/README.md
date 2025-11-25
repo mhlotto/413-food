@@ -22,5 +22,6 @@
 - `hours`: Map of day -> time window string.
 - `highlight_items`: List of signature dishes with `item` and `note`.
 - `notes`: Freeform quick facts (parking, cash-only, wait times, seasonal).
+- `comments`: Optional list of short freeform notes (e.g., user observations, seasonal specials).
 - `last_verified`: Date you confirmed the info.
 - `sources`: List of `{ type, detail }` entries.

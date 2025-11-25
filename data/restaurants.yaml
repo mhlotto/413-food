@@ -30,6 +30,8 @@
     - item: Chicken shawarma platter
       note: Large portion, good for sharing
   notes: Counter-serve; limited seating; delivery via local apps
+  comments:
+    - "Takes a minute to cool; ask for extra hot sauce if you like heat."
   last_verified: 2024-10-15
   sources:
     - type: visited
@@ -68,6 +70,8 @@
     - item: Beef noodle soup
       note: Rich broth; request spice level
   notes: Reservations recommended on weekends; vegetarian options available; gluten-free options limited
+  comments:
+    - "Lunch specials are good value before 3pm."
   last_verified: 2024-10-10
   sources:
     - type: visited

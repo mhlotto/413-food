@@ -105,17 +105,28 @@
         <tbody></tbody>
       </table>
     </div>
+    <section id="detail" hidden>
+      <h2 id="detail-name"></h2>
+      <p class="muted" id="detail-meta"></p>
+      <div id="detail-links"></div>
+      <div id="detail-sections"></div>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
   <script>
     const DATA_URL = "../data/restaurants.yaml";
-    const state = { entries: [], filtered: [] };
+    const state = { entries: [], filtered: [], selected: null };
 
     const statusEl = document.getElementById("status");
     const searchEl = document.getElementById("search");
     const priceEl = document.getElementById("priceFilter");
     const tbody = document.querySelector("#table tbody");
+    const detail = document.getElementById("detail");
+    const detailName = document.getElementById("detail-name");
+    const detailMeta = document.getElementById("detail-meta");
+    const detailLinks = document.getElementById("detail-links");
+    const detailSections = document.getElementById("detail-sections");
 
     searchEl.addEventListener("input", applyFilters);
     priceEl.addEventListener("change", applyFilters);
@@ -130,7 +141,8 @@
         state.entries = data.slice().sort((a, b) => a.name.localeCompare(b.name));
         statusEl.textContent = `Loaded ${state.entries.length} spots`;
         state.filtered = state.entries;
-        render();
+        renderTable();
+        hydrateFromHash();
       } catch (err) {
         console.error(err);
         statusEl.textContent = "Could not load data. Ensure data/restaurants.yaml is accessible.";
@@ -146,13 +158,23 @@
         const matchesPrice = !price || entry.price === price;
         return matchesTerm && matchesPrice;
       });
-      render();
+      renderTable();
     }
 
-    function render() {
+    function renderTable() {
       tbody.innerHTML = "";
       for (const entry of state.filtered) {
         const row = document.createElement("tr");
+        row.tabIndex = 0;
+        row.setAttribute("role", "button");
+        row.setAttribute("aria-label", `Details for ${entry.name}`);
+        row.addEventListener("click", () => selectEntry(entry));
+        row.addEventListener("keypress", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            selectEntry(entry);
+          }
+        });
         row.innerHTML = `
           <td>${escapeHtml(entry.name || "")}</td>
           <td>${escapeHtml(entry.neighborhood || "")}</td>
@@ -178,6 +200,74 @@
         .join("");
     }
 
+    function selectEntry(entry) {
+      state.selected = entry;
+      const slug = slugify(entry.name || "");
+      if (slug) {
+        history.replaceState(null, "", `#${slug}`);
+      }
+      renderDetail(entry);
+    }
+
+    function hydrateFromHash() {
+      const hash = window.location.hash.replace("#", "").trim();
+      if (!hash) return;
+      const match = state.entries.find((e) => slugify(e.name || "") === hash);
+      if (match) {
+        selectEntry(match);
+      }
+    }
+
+    function renderDetail(entry) {
+      detail.hidden = false;
+      detailName.textContent = entry.name || "";
+      detailMeta.textContent = `${entry.neighborhood || ""} · ${entry.cuisine || ""} · ${entry.price || ""}`.replace(/\\s·\\s/g, " · ").trim();
+
+      const links = [];
+      if (entry.website) links.push(`<a href="${escapeAttr(entry.website)}" target="_blank" rel="noopener noreferrer">Website</a>`);
+      if (entry.phone) links.push(`<a href="tel:${escapeAttr(entry.phone)}">Call</a>`);
+      detailLinks.innerHTML = links.join(" · ");
+
+      const sections = [];
+      sections.push(section("Ordering", renderOrdering(entry.ordering)));
+      sections.push(section("Dietary", renderDietary(entry.dietary)));
+      sections.push(section("Hours", renderHours(entry.hours)));
+      sections.push(section("Highlights", renderHighlights(entry.highlight_items)));
+      if (entry.notes) sections.push(section("Notes", escapeHtml(entry.notes)));
+      if (Array.isArray(entry.comments) && entry.comments.length) {
+        sections.push(section("Comments", entry.comments.map((c) => `<div>• ${escapeHtml(c)}</div>`).join("")));
+      }
+      if (Array.isArray(entry.sources) && entry.sources.length) {
+        sections.push(section("Sources", entry.sources.map((s) => `<div>${escapeHtml(s.type || "")}: ${escapeHtml(s.detail || "")}</div>`).join("")));
+      }
+      sections.push(section("Last verified", escapeHtml(entry.last_verified || "")));
+      detailSections.innerHTML = sections.join("");
+    }
+
+    function section(title, content) {
+      if (!content) return "";
+      return `<div><h3>${escapeHtml(title)}</h3><div>${content}</div></div>`;
+    }
+
+    function renderDietary(dietary = {}) {
+      if (typeof dietary !== "object") return "";
+      const flags = [];
+      if (dietary.vegetarian_friendly) flags.push("Vegetarian-friendly");
+      if (dietary.vegan_options) flags.push("Vegan options");
+      if (dietary.gluten_free_friendly) flags.push("Gluten-free friendly");
+      if (!flags.length) return "";
+      return flags.map((f) => `<span class="badge">${escapeHtml(f)}</span>`).join(" ");
+    }
+
+    function renderHours(hours = {}) {
+      if (typeof hours !== "object") return "";
+      const days = ["mon","tue","wed","thu","fri","sat","sun"];
+      return days
+        .filter((d) => hours[d])
+        .map((d) => `<div><strong>${d.toUpperCase()}</strong>: ${escapeHtml(hours[d])}</div>`)
+        .join("");
+    }
+
     function escapeHtml(str) {
       return String(str)
         .replace(/&/g, "&amp;")
@@ -185,6 +275,14 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/"/g, "&quot;");
+    }
+
+    function slugify(str) {
+      return String(str).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     }
 
     loadData();
