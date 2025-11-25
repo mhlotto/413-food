@@ -1,0 +1,36 @@
+- name: Johnny's Tavern
+  town: Amherst
+  neighborhood: Downtown Amherst
+  address: 30 Boltwood Walk, Amherst, MA 01002
+  coordinates:
+    lat: 42.3752
+    lng: -72.5185
+  phone: 413-253-8000
+  website: https://www.johnnystavernamherst.com/
+  cuisine: American tavern, wood-fired pizza
+  price: $$
+  ordering:
+    - dine-in
+    - takeout
+  dietary:
+    vegetarian_friendly: true
+    vegan_options: false
+    gluten_free_friendly: false
+  hours:
+    mon: "11:30-22:00"
+    tue: "11:30-22:00"
+    wed: "11:30-22:00"
+    thu: "11:30-22:00"
+    fri: "11:30-23:00"
+    sat: "11:30-23:00"
+    sun: "11:30-22:00"
+  highlight_items:
+    - item: Wood-fired margherita pizza
+      note: Thin crust with fresh mozzarella and basil
+    - item: Tavern burger
+      note: Classic burger with cheddar on a brioche bun
+  notes: Casual tavern with bar seating; online reservations via site
+  last_verified: 2025-11-25
+  sources:
+    - type: website
+      detail: https://www.johnnystavernamherst.com/
