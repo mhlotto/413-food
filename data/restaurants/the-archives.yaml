@@ -1,0 +1,48 @@
+- name: The Archives
+  town: Amherst
+  neighborhood: Downtown Amherst
+  address: 30 Boltwood Walk, Amherst, MA 01002
+  coordinates:
+    lat: 42.3749
+    lng: -72.5186
+  phone: ""
+  website: https://www.thearchivesamherst.com/
+  cuisine: Cocktail bar and snacks
+  categories:
+    - bar
+  offerings:
+    - alcohol
+    - food
+  price: $$$
+  ordering:
+    - dine-in
+  dietary:
+    vegetarian_friendly: false
+    vegan_options: false
+    gluten_free_friendly: false
+  hours:
+    mon: closed
+    tue: "17:00-24:00"
+    wed: "17:00-24:00"
+    thu: "17:00-24:00"
+    fri: "17:00-24:00"
+    sat: "17:00-24:00"
+    sun: "17:00-24:00"
+  highlight_items:
+    - item: Black Manhattan
+      note: Jefferson’s Ocean, Averna, Angostura bitters; premium Old Fashioned riff
+    - item: Lucid Dream
+      note: Clarified milk punch with Old Tom gin, Chartreuse, pear liqueur, chamomile and lemongrass tea
+    - item: Ponzu Celery
+      note: Citrus, soy, sesame, salted konbu snack; one of several small bites
+  notes: Entrance through Brick & Mortar Realty; speakeasy-style cocktail bar with small snacks and tasting flights
+  last_verified: 2025-11-29
+  sources:
+    - type: website
+      detail: https://www.thearchivesamherst.com/
+    - type: menu
+      detail: "https://images.squarespace-cdn.com/content/v1/67de13c8628ad84dd2e9fbdf/9cfbb052-c0d5-4768-884f-dc8324d546a1/Screenshot+2025-09-09+at+5.08.54+PM.png?format=750w"
+    - type: menu
+      detail: "https://images.squarespace-cdn.com/content/v1/67de13c8628ad84dd2e9fbdf/272a77e2-9db3-4508-a24d-1d536f22b18e/Screenshot+2025-09-09+at+5.09.10+PM.png?format=750w"
+    - type: menu
+      detail: "https://images.squarespace-cdn.com/content/v1/67de13c8628ad84dd2e9fbdf/079b1a98-f199-4d1f-b736-76a5b51cc4c8/Screenshot+2025-09-09+at+5.07.59+PM.png?format=750w"
