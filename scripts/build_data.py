@@ -69,14 +69,15 @@ def update_static_fallback(entries: list) -> None:
 
     rows = []
     for entry in entries:
-        name = escape(str(entry.get("name", "")))
-        town = escape(str(entry.get("town", "")))
-        neighborhood = escape(str(entry.get("neighborhood", "")))
-        categories = ", ".join(entry.get("categories", []) or [])
-        cuisine = escape(str(entry.get("cuisine", "")))
-        price = escape(str(entry.get("price", "")))
+        name = escape(str(entry.get("name", "")).replace("\u2014", "-"))
+        town = escape(str(entry.get("town", "")).replace("\u2014", "-"))
+        neighborhood = escape(str(entry.get("neighborhood", "")).replace("\u2014", "-"))
+        categories_raw = ", ".join(entry.get("categories", []) or [])
+        categories = escape(categories_raw.replace("\u2014", "-"))
+        cuisine = escape(str(entry.get("cuisine", "")).replace("\u2014", "-"))
+        price = escape(str(entry.get("price", "")).replace("\u2014", "-"))
         rows.append(
-            f"<tr><td>{name}</td><td>{town}</td><td>{neighborhood}</td><td>{escape(categories)}</td><td>{cuisine}</td><td>{price}</td></tr>"
+            f"<tr><td>{name}</td><td>{town}</td><td>{neighborhood}</td><td>{categories}</td><td>{cuisine}</td><td>{price}</td></tr>"
         )
     table_html = "\n".join(rows)
 

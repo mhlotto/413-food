@@ -612,7 +612,8 @@
     }
 
     function escapeHtml(str) {
-      return String(str)
+      const normalized = String(str).replace(/\u2014/g, "-");
+      return normalized
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
